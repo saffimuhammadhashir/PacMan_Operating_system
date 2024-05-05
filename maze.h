@@ -53,8 +53,8 @@ public:
             }
         }
 
-        wall_T_horizontal.loadFromFile("images/wall1_horizontal.png");
-        wall_T_vertical.loadFromFile("images/wall1_vertical.png");
+        wall_T_horizontal.loadFromFile("images/wall3_horizontal.png");
+        wall_T_vertical.loadFromFile("images/wall3_vertical.png");
         wall_s_horizontal = new Sprite[n_horizontal];
         wall_s_vertical = new Sprite[n_vertical];
 
