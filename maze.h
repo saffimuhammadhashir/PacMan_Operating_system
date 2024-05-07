@@ -43,7 +43,7 @@ public:
     Sprite *wall_s_righttop;
     Sprite *wall_s_leftbottom;
     Sprite *wall_s_rightbottom;
-    Text pacman_title, Highscore_title, level_title, level_percentage;
+    Text pacman_title, Highscore_title, level_title, level_percentage, name_s, level_s;
     int n_horizontal;
     int n_vertical;
     int n_lefttop;
@@ -139,14 +139,19 @@ public:
         bg2_main_S.setTexture(bg2_main_T);
         highscores_main_S.setTexture(highscores_main_T);
         level_main_S.setTexture(level_main_T);
-
-        bg_main_S.setPosition(800, 0);
+        name_s.setCharacterSize(24);
+        level_s.setCharacterSize(35);
+        name_s.setFillColor(Color::White);
+        level_s.setFillColor(Color::White);
+        name_s.setPosition(990,400);
+        level_s.setPosition(50,660);
+        bg_main_S.setPosition(900, 0);
         bg2_main_S.setPosition(0, 650);
-        highscores_main_S.setPosition(790, 420);
+        highscores_main_S.setPosition(880, 420);
         level_main_S.setPosition(50, 680);
         bg_main_S.setScale(3.5f, 2.0f);
         bg2_main_S.setScale(2.5f, 1.7f);
-        highscores_main_S.setScale(0.9f, 0.8f);
+        highscores_main_S.setScale(0.7f, 0.8f);
         level_main_S.setScale(1.3f, 1.3f);
         Teleportationy1.setTexture(Y1teleportation);
         Teleportationy2.setTexture(Y2teleportation);
@@ -167,20 +172,24 @@ public:
         pacman_title.setFont(font);
         Highscore_title.setFont(font);
         level_title.setFont(font);
+        level_percentage.setFont(font);
+        name_s.setFont(font);
+        level_s.setFont(font);
         pacman_title.setString("PacMan");
         Highscore_title.setString("Highscores");
         level_title.setString("Level Bar");
-        level_percentage.setString("50%");
+
         pacman_title.setCharacterSize(80);
         Highscore_title.setCharacterSize(54);
         level_title.setCharacterSize(24);
         pacman_title.setFillColor(Color::White);
         Highscore_title.setFillColor(Color::Black);
         level_title.setFillColor(Color::Red);
-
-        pacman_title.setPosition(920, 100);
-        Highscore_title.setPosition(920, 480);
+        level_percentage.setCharacterSize(24);
+        pacman_title.setPosition(960, 100);
+        Highscore_title.setPosition(960, 480);
         level_title.setPosition(310, 670);
+        level_percentage.setPosition(330, 710);
 
         for (int i = 0; i < n_horizontal; i++)
         {
@@ -220,7 +229,7 @@ public:
         }
     }
 
-    void display(RenderWindow &window)
+    void display(RenderWindow &window, int level, int validitycount, int foodcount, string name)
     {
 
         for (int i = 0; i < n_horizontal; i++)
@@ -247,6 +256,12 @@ public:
         {
             window.draw(wall_s_righttop[i]);
         }
+        float scalingfactor = ((float)validitycount) / ((float)foodcount);
+      
+        level_main_S.setScale(scalingfactor, 1.3f);
+        
+        level_s.setString("Level "+to_string(level));
+        name_s.setString("Name "+name);
         window.draw(Teleportationy1);
         window.draw(Teleportationy2);
         window.draw(Teleportationx);
@@ -257,6 +272,10 @@ public:
         window.draw(Highscore_title);
         window.draw(pacman_title);
         window.draw(level_title);
+        window.draw(level_s);
+        window.draw(name_s);
+        level_percentage.setString(to_string((int)(scalingfactor * 100)) + "%");
+        window.draw(level_percentage);
     }
     void move(int x, int y)
     {

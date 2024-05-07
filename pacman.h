@@ -15,7 +15,7 @@ public:
     {
         pacman_T.loadFromFile("images/1_right.png");
         pacman_S.setTexture(pacman_T);
-        pacman_S.setPosition(300, 300);
+        pacman_S.setPosition(350, 200);
         pacman_S.setScale(0.06, 0.06);
     }
     void face_movement(int type)
