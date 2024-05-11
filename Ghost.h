@@ -22,8 +22,11 @@ public:
     int dir = (rand() % 2 == 0) ? 1 : 3;
     int mytype;
     int myytype;
+    bool Bactive;
+    string original;
     Ghost()
     {
+        original="";
     }
     Ghost(int type)
     {
@@ -31,22 +34,36 @@ public:
         myytype=y;
         type = type % 4;
         mytype = type;
+        Bactive=0;
         srand(time(0));
         if (type == 0)
         {
             ghost_t.loadFromFile("images/ghost1.png");
+            original="images/ghost1.png";
         }
         else if (type == 1)
         {
             ghost_t.loadFromFile("images/ghost2.png");
+            original="images/ghost2.png";
         }
         else
         {
             ghost_t.loadFromFile("images/ghost3.png");
+            original="images/ghost3.png";
         }
         ghost_s.setTexture(ghost_t);
         ghost_s.setPosition(type * 80 + 510, y * 60 + 360);
         ghost_s.setScale(0.15, 0.15);
+    }
+    void makeactive(){
+        Bactive=1;
+        ghost_t.loadFromFile("images/speed.png");
+        ghost_s.setTexture(ghost_t);
+    }
+    void makeinactive(){
+
+        ghost_t.loadFromFile(original);
+        ghost_s.setTexture(ghost_t);
     }
 };
 
@@ -63,6 +80,7 @@ public:
     int schange1;
     int outside;
     int huntT;
+
     Ghostlist() {
         start=NULL;
         Gsize=0;
@@ -74,6 +92,7 @@ public:
         schange1=0;
         outside=0;
         huntT=0;
+
     }
     void create(int i)
     {
@@ -102,6 +121,12 @@ public:
         pchange1=Gsize;
         x=xx;
         y=yy;
+    }
+
+    void removeactive(){
+        for(int i=0;i<Gsize;i++){
+            start[i].Bactive=0;
+        }
     }
 
     void updatehunt(){

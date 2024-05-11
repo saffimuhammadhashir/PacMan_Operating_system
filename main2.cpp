@@ -20,12 +20,16 @@
 
 using namespace std;
 
-sem_t ghost_key;
+const int Ghost_speed=5;
+
+sem_t ghost_key,booster_key;
 
 const int GG=5;
 pthread_t threadsG[GG];
 int valuesG[GG];
 pthread_mutex_t busyG[GG];
+
+pthread_t threadsBoost[GG];
 
 void Gbakery_lock(int num){
     pthread_mutex_lock(&busyG[num]);
@@ -59,7 +63,7 @@ void Gbakery_unlock(int num){
 }
 
 
-const int Tnumb=4;
+const int Tnumb=5;
 pthread_t threads[Tnumb];
 int values[Tnumb];
 pthread_mutex_t busy[Tnumb];
@@ -102,7 +106,7 @@ class Game
 
 public:
     RenderWindow window;
-    Clock mouth_open, automoving, lifeT, ghostselfmove, movement, moveout, teleporting, critical_state_ghost, pallettimer, eatghosts,ghostkeyT;
+    Clock mouth_open, automoving, boostT, lifeT, ghostselfmove, movement, moveout, teleporting, critical_state_ghost, pallettimer, eatghosts,ghostkeyT;
     Pacman player;
     Maze maze;
     Food food;
@@ -113,7 +117,7 @@ public:
     PowerPallet pallet;
     bool activepallet;
     Font font;
-    bool firstappearance = false;
+    bool firstappearance = true;
     int previousmove = 0;
     int score = 0;
     string name = "Guest";
@@ -660,21 +664,34 @@ public:
         if (targetx > PosX)
         {
             PosX += 2;
+            if(curr->Bactive){
+                PosX+=Ghost_speed;
+            }
         }
         else if (targetx < PosX)
         {
             PosX -= 2;
+            if(curr->Bactive){
+                PosX-=Ghost_speed;
+            }
         }
         else
         {
             if (targety > PosY)
             {
                 PosY += 2;
+                if(curr->Bactive){
+                    PosY+=Ghost_speed;
+                }
             }
             else if (targety < PosY)
             {
                 PosY -= 2;
+                if(curr->Bactive){
+                    PosY-=Ghost_speed;
+                }
             }
+            
             curr->ghost_s.setPosition(orgposX, PosY);
             if (!checkCollision(curr->ghost_s, maze.wall_s_horizontal, maze.n_horizontal) &&
                 !checkCollision(curr->ghost_s, maze.wall_s_vertical, maze.n_vertical) &&
@@ -804,8 +821,7 @@ public:
 
             for (int i = 0; i < food.n_food; i++)
             {
-                if (food.valid[i] != 1)
-                {
+
                     if (rand() % food.n_food == 0)
                     {
                         pallet.Visible = true;
@@ -813,7 +829,7 @@ public:
                         return;
                     }
                 }
-            }
+            
         }
     }
 
@@ -964,7 +980,12 @@ public:
                         moveghostsout1(i);
                     }
                 }
-
+                //boost
+                if (boostT.getElapsedTime().asSeconds() >= 10)
+                {
+                    ghosts.removeactive();
+                    boostT.restart();
+                }
 
                 //pacman mouth move
                 if (mouth_open.getElapsedTime().asSeconds() >= 0.4)
@@ -979,7 +1000,7 @@ public:
                     automoving.restart();
                 }
                 //eat plate
-                palletcollection();
+
                 //something related to teleporting idk
                 if (teleporting.getElapsedTime().asSeconds() >= 0.8f && teleported)
                 {
@@ -999,7 +1020,7 @@ public:
                     ghostkeyT.restart();
                 }
                 //ghost movement
-                if (movement.getElapsedTime().asSeconds() > 0.0905f)
+                if (movement.getElapsedTime().asSeconds() > 0.0405f)
                 {
                     movement.restart();
                 }
@@ -1010,23 +1031,6 @@ public:
                         movementdetector();
                     }
                     ghosts.updatehunt();
-                }
-                //pallets
-                if (pallettimer.getElapsedTime().asSeconds() >= 15.0f && !pallet.Visible)
-                {
-                    deploypallet();
-                }
-                //gaari ke blinker
-                if (eatghosts.getElapsedTime().asSeconds() > 5.0f && eatghosts.getElapsedTime().asSeconds() < 5.3f)
-                {
-                    ghosts.unblink();
-                    activepallet = false;
-                }
-                //pata nahi kia
-                if (critical_state_ghost.getElapsedTime().asSeconds() >= 0.5f)
-                {
-                    critical_state_ghost.restart();
-                    reconsider_critical_state_ghost();
                 }
                 //lives
                 if (lives <= 0)
@@ -1060,6 +1064,50 @@ public:
 
         }
     }
+    //boost
+    void boost_Game(int Tnum){
+        while (window.isOpen()){
+            
+            sem_wait(&booster_key);
+
+            ghosts.start[Tnum].makeactive();
+            while(ghosts.start[Tnum].Bactive){
+                sleep(1);
+            }
+
+            sem_post(&booster_key);
+            ghosts.start[Tnum].makeinactive();
+            usleep(10000);
+        }
+    }
+    //pallet
+    void pallet_Game(int Tnum){
+
+        while (window.isOpen()){
+            
+            bakery_lock(Tnum);
+                palletcollection();
+                //pallets
+                if (pallettimer.getElapsedTime().asSeconds() >= 15.0f && !pallet.Visible)
+                {
+                    deploypallet();
+                }
+                //gaari ke blinker
+                if (eatghosts.getElapsedTime().asSeconds() > 9.0f && eatghosts.getElapsedTime().asSeconds() < 9.3f)
+                {
+                    ghosts.unblink();
+                    activepallet = false;
+                }
+                //pata nahi kia
+                if (critical_state_ghost.getElapsedTime().asSeconds() >= 0.5f)
+                {
+                    critical_state_ghost.restart();
+                    reconsider_critical_state_ghost();
+                }
+                
+            bakery_unlock(Tnum);
+        }
+    }
 };
 
 Game G;
@@ -1088,9 +1136,21 @@ void* food_t(void*arg){
     pthread_exit(NULL);
 }
 
+void* pallet_t(void*arg){
+    int Tnum=*((int*)arg);
+        G.pallet_Game(Tnum);
+    pthread_exit(NULL);
+}
+
 void* ghost_t(void*arg){
     int Tnum=*((int*)arg);
         G.ghost_Game(Tnum);
+    pthread_exit(NULL);
+}
+
+void* boost_t(void*arg){
+    int Tnum=*((int*)arg);
+        G.boost_Game(Tnum);
     pthread_exit(NULL);
 }
 
@@ -1108,6 +1168,7 @@ int main(){
     }
 
     sem_init(&ghost_key,0,1);
+    sem_init(&booster_key,0,2);
 
     srand(time(0));
     //interface
@@ -1115,9 +1176,11 @@ int main(){
     pthread_create(&threads[1],NULL,input_t,(void*)(new int(1)));
     pthread_create(&threads[2],NULL,engine_t,(void*)(new int(2)));
     pthread_create(&threads[3],NULL,food_t,(void*)(new int(3)));
+    pthread_create(&threads[4],NULL,pallet_t,(void*)(new int(4)));
 
     for(int i=0;i<GG;i++){
         pthread_create(&threadsG[i],NULL,ghost_t,(void*)(new int(i)));
+        pthread_create(&threadsBoost[i],NULL,boost_t,(void*)(new int(i)));
     }
     //main thread
     while (window2.isOpen()){}
