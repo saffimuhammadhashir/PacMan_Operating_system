@@ -1,4 +1,9 @@
+Guest 3700
+Guest 2650
 Guest 2450
+Guest 1750
+Guest 1550
+Guest 750
 Hashir 200
 Guest 50
 Hashir 0

@@ -121,7 +121,7 @@ public:
             }
             window.clear();
             window.draw(player.pacman_S);
-            //!
+            //done
             if (eatghosts.getElapsedTime().asSeconds() > 5.0f && eatghosts.getElapsedTime().asSeconds() < 5.3f)
             {
                 ghosts.unblink();
@@ -133,7 +133,7 @@ public:
                 player.face_movement(0);
                 mouth_open.restart();
             }
-            //!
+            //done
             if (pallettimer.getElapsedTime().asSeconds() >= 15.0f && !pallet.Visible)
             {
                 deploypallet();
@@ -145,7 +145,7 @@ public:
                 automove();
                 automoving.restart();
             }
-            //!
+            //done
             if (ghostselfmove.getElapsedTime().asSeconds() >= 0.06)
             {
                 ghosts.selfmove();
@@ -157,7 +157,7 @@ public:
                 ghostlaunched = true;
                 moveout.restart();
             }
-
+            //done
             if (movement.getElapsedTime().asSeconds() > 0.0105f)
             {
 
@@ -176,12 +176,13 @@ public:
             {
                 teleported = false;
             }
-            //!
+            //done
             if (critical_state_ghost.getElapsedTime().asSeconds() >= 0.5f)
             {
                 critical_state_ghost.restart();
                 reconsider_critical_state_ghost();
             }
+            //done
             float time_left = pallettimer.getElapsedTime().asSeconds();
             if (!firstappearance)
             {
@@ -196,6 +197,7 @@ public:
             {
                 val = 1;
             }
+            //done
             pacman_ghost_collision();
             palletcollection();
 
@@ -210,7 +212,7 @@ public:
             maze.display(window, level, validitycount, food.n_food, name, val, lives);
             displayTopThreeScores();
             window.display();
-            //!
+            //done
             if (lives <= 0)
             {
                 highscore.insert(score, name);

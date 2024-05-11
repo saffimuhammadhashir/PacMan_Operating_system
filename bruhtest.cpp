@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <semaphore.h>
 //
 #include <SFML/Graphics.hpp>
 #include "pacman.h"
@@ -20,9 +19,7 @@
 
 using namespace std;
 
-sem_t ghost_key;
-
-const int GG=5;
+const int GG=0;
 pthread_t threadsG[GG];
 int valuesG[GG];
 pthread_mutex_t busyG[GG];
@@ -59,7 +56,7 @@ void Gbakery_unlock(int num){
 }
 
 
-const int Tnumb=4;
+const int Tnumb=3;
 pthread_t threads[Tnumb];
 int values[Tnumb];
 pthread_mutex_t busy[Tnumb];
@@ -102,7 +99,7 @@ class Game
 
 public:
     RenderWindow window;
-    Clock mouth_open, automoving, lifeT, ghostselfmove, movement, moveout, teleporting, critical_state_ghost, pallettimer, eatghosts,ghostkeyT;
+    Clock mouth_open, automoving, ghostselfmove, movement, moveout, teleporting, critical_state_ghost, pallettimer, eatghosts;
     Pacman player;
     Maze maze;
     Food food;
@@ -154,25 +151,6 @@ public:
         }
 
         return false;
-    }
-
-    void palletcollection()
-    {
-
-        FloatRect pacmanBounds = player.pacman_S.getGlobalBounds();
-
-        FloatRect wallBounds = pallet.pallet_s.getGlobalBounds();
-
-        if (pacmanBounds.intersects(wallBounds) && pallet.Visible)
-        {
-            pallet.Visible = false;
-            score += 100;
-            pallettimer.restart();
-            eatghosts.restart();
-            ghosts.blink();
-            activepallet = true;
-            return;
-        }
     }
 
     void move(Event &event)
@@ -505,382 +483,16 @@ public:
 
         return -1;
     }
-    bool ghostcheck(Ghost *org)
-    {
-
-        if (ghosts.start)
-        {
-            FloatRect pacmanBounds = org->ghost_s.getGlobalBounds();
-            Ghost *curr = ghosts.start;
-            while (curr)
-            {
-                if (org != curr)
-                {
-                    FloatRect wallBounds = curr->ghost_s.getGlobalBounds();
-                    if (pacmanBounds.intersects(wallBounds))
-                    {
-                        return true;
-                    }
-                }
-                curr = curr->next;
-            }
-        }
-        if (org->ghost_s.getPosition().x > maze.centerx - 100 && org->ghost_s.getPosition().x < maze.centerx + 100 && org->ghost_s.getPosition().y < maze.centery + 80 && org->ghost_s.getPosition().y > maze.centery + 20 && !org->home)
-        {
-            return true;
-        }
-        return false;
-    }
-    void movementdetector()
-    {
-        bool wallfound = false;
-        int PosY = player.pacman_S.getPosition().y;
-        int PosX = player.pacman_S.getPosition().x;
-
-        while (!wallfound)
-        {
-            if (player.dir == 1)
-            {
-                player.pacman_S.setPosition(player.pacman_S.getPosition().x + 10, PosY);
-            }
-            else if (player.dir == 3)
-            {
-                player.pacman_S.setPosition(player.pacman_S.getPosition().x - 10, PosY);
-            }
-            else if (player.dir == 2)
-            {
-                player.pacman_S.setPosition(PosX, player.pacman_S.getPosition().y - 10);
-            }
-            else
-            {
-                player.pacman_S.setPosition(PosX, player.pacman_S.getPosition().y + 10);
-            }
-
-            if (checkCollision(player.pacman_S, maze.wall_s_horizontal, maze.n_horizontal) ||
-                checkCollision(player.pacman_S, maze.wall_s_vertical, maze.n_vertical) ||
-                checkCollision(player.pacman_S, maze.wall_s_leftbottom, maze.n_leftbottom) ||
-                checkCollision(player.pacman_S, maze.wall_s_lefttop, maze.n_lefttop) ||
-                checkCollision(player.pacman_S, maze.wall_s_rightbottom, maze.n_rightbottom) ||
-                checkCollision(player.pacman_S, maze.wall_s_righttop, maze.n_righttop) ||
-                teleport(player.pacman_S, maze.Teleportationx) || teleport(player.pacman_S, maze.Teleportationy1) || teleport(player.pacman_S, maze.Teleportationy2))
-            {
-                wallfound = true;
-                targetx = PosX;
-                targety = PosY;
-            }
-        }
-        player.pacman_S.setPosition(PosX, PosY);
-    }
-
-    void chase(Ghost *curr)
-    {
-        moveHorizontally(curr);
-
-        //moveVertically(curr);
-    }
-
-    void resolvestatic(Ghost *curr)
-    {
-        int PosY = curr->ghost_s.getPosition().y;
-        int PosX = curr->ghost_s.getPosition().x;
-        int orgposY = PosY;
-        int orgposX = PosX;
-        if (curr->dir != 1 && curr->dir != 2 && curr->dir != 3 && curr->dir != 4)
-        {
-            curr->dir = rand() % 3 + 1;
-        }
-        if (curr->dir == 1)
-        {
-            PosX++;
-        }
-        else if (curr->dir == 2)
-        {
-            PosY--;
-        }
-        else if (curr->dir == 3)
-        {
-            PosX--;
-        }
-        else if (curr->dir == 4)
-        {
-            PosY++;
-        }
-        curr->ghost_s.setPosition(PosX, PosY);
-        if (!checkCollision(curr->ghost_s, maze.wall_s_horizontal, maze.n_horizontal) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_vertical, maze.n_vertical) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_leftbottom, maze.n_leftbottom) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_lefttop, maze.n_lefttop) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_rightbottom, maze.n_rightbottom) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_righttop, maze.n_righttop) &&
-            !ghostcheck(curr))
-        {
-            return;
-        }
-        else
-        {
-            curr->ghost_s.setPosition(orgposX, orgposY);
-            curr->dir++;
-        }
-    }
-
-    void hunt(int i)
-    {
-        if (ghosts.start && ghosts.huntT>0)
-        {
-            ghosts.huntT-=1;
-            Ghost *curr = &ghosts.start[i];
-
-            if (!curr->criticalstate && !curr->home)
-            {
-                curr->prevx = curr->ghost_s.getPosition().x;
-                curr->prevy = curr->ghost_s.getPosition().y;
-                chase(curr);
-                if (curr->ghost_s.getPosition().x == curr->prevx && abs(curr->ghost_s.getPosition().y - curr->prevy) < 2)
-                {
-                    curr->criticalstate = true;
-                    critical_state_ghost.restart();
-                }
-            }
-            else
-            {
-                resolvestatic(curr);
-            }
-
-        }
-
-    }
-
-    bool moveHorizontally(Ghost *curr)
-    {
-        int PosY = curr->ghost_s.getPosition().y;
-        int PosX = curr->ghost_s.getPosition().x;
-        int orgposY = PosY;
-        int orgposX = PosX;
-
-        if (targetx > PosX)
-        {
-            PosX += 2;
-        }
-        else if (targetx < PosX)
-        {
-            PosX -= 2;
-        }
-        else
-        {
-            if (targety > PosY)
-            {
-                PosY += 2;
-            }
-            else if (targety < PosY)
-            {
-                PosY -= 2;
-            }
-            curr->ghost_s.setPosition(orgposX, PosY);
-            if (!checkCollision(curr->ghost_s, maze.wall_s_horizontal, maze.n_horizontal) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_vertical, maze.n_vertical) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_leftbottom, maze.n_leftbottom) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_lefttop, maze.n_lefttop) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_rightbottom, maze.n_rightbottom) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_righttop, maze.n_righttop) &&
-                !ghostcheck(curr))
-            {
-                curr->ghost_s.setPosition(PosX, PosY);
-                return true;
-            }
-            curr->ghost_s.setPosition(orgposX, orgposY);
-            return false;
-        }
-        curr->ghost_s.setPosition(PosX, orgposY);
-        if (!checkCollision(curr->ghost_s, maze.wall_s_horizontal, maze.n_horizontal) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_vertical, maze.n_vertical) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_leftbottom, maze.n_leftbottom) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_lefttop, maze.n_lefttop) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_rightbottom, maze.n_rightbottom) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_righttop, maze.n_righttop) &&
-            !ghostcheck(curr))
-        {
-            curr->ghost_s.setPosition(PosX, PosY);
-            return true;
-        }
-        curr->ghost_s.setPosition(orgposX, orgposY);
-        return false;
-    }
-
-    bool moveVertically(Ghost *curr)
-    {
-        int PosY = curr->ghost_s.getPosition().y;
-        int PosX = curr->ghost_s.getPosition().x;
-        int orgposY = PosY;
-        int orgposX = PosX;
-
-        if (targety > PosY)
-        {
-            PosY += 2;
-        }
-        else if (targety < PosY)
-        {
-            PosY -= 2;
-        }
-        else
-        {
-            if (targetx > PosX)
-            {
-                PosX += 2;
-            }
-            else if (targetx < PosX)
-            {
-                PosX -= 2;
-            }
-            curr->ghost_s.setPosition(PosX, orgposY);
-            if (!checkCollision(curr->ghost_s, maze.wall_s_horizontal, maze.n_horizontal) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_vertical, maze.n_vertical) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_leftbottom, maze.n_leftbottom) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_lefttop, maze.n_lefttop) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_rightbottom, maze.n_rightbottom) &&
-                !checkCollision(curr->ghost_s, maze.wall_s_righttop, maze.n_righttop) &&
-                !ghostcheck(curr))
-            {
-                curr->ghost_s.setPosition(PosX, PosY);
-                return true;
-            }
-            curr->ghost_s.setPosition(orgposX, orgposY);
-            return false;
-        }
-        curr->ghost_s.setPosition(orgposX, PosY);
-        if (!checkCollision(curr->ghost_s, maze.wall_s_horizontal, maze.n_horizontal) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_vertical, maze.n_vertical) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_leftbottom, maze.n_leftbottom) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_lefttop, maze.n_lefttop) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_rightbottom, maze.n_rightbottom) &&
-            !checkCollision(curr->ghost_s, maze.wall_s_righttop, maze.n_righttop) &&
-            !ghostcheck(curr))
-        {
-            curr->ghost_s.setPosition(PosX, PosY);
-            return true;
-        }
-        curr->ghost_s.setPosition(orgposX, orgposY);
-        return false;
-    }
-
     void moveghostsout(int i)
     {
-        int key_c=0;
-        while(key_c<2){
-            sem_wait(&ghost_key);
-            key_c++;
-            usleep(10000);
-        }
-        ghosts.outside+=1;
         if (ghosts.start)
         {
             Ghost *curr = &(ghosts.start[i]);
 
-            curr->ghost_s.setPosition(maze.centerx+20 - 30 * i, maze.centery - 5*(rand()%5));
-            curr->dir=rand()%4+1;
+            curr->ghost_s.setPosition(maze.centerx - 30 * i, maze.centery + 5);
             curr->home = false;
 
         }
-    }
-
-    void moveghostsout1(int i)
-    {
-        if (ghosts.start)
-        {
-            Ghost *curr = &(ghosts.start[i]);
-            if(curr->home){
-                curr->ghost_s.setPosition(maze.centerx+20 - 30 * i, maze.centery - 5*(rand()%5));
-                curr->dir=rand()%4+1;
-                curr->home = false;
-            }
-
-
-        }
-    }
-
-    void deploypallet()
-    {
-        while (!pallet.Visible)
-        {
-
-            for (int i = 0; i < food.n_food; i++)
-            {
-                if (food.valid[i] != 1)
-                {
-                    if (rand() % food.n_food == 0)
-                    {
-                        pallet.Visible = true;
-                        pallet.pallet_s.setPosition(food.food_coords[i][0] - 15, food.food_coords[i][1] - 15);
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    bool enemy_pacman(Ghost *curr)
-    {
-        FloatRect pacmanBounds = player.pacman_S.getGlobalBounds();
-        FloatRect wallBounds = curr->ghost_s.getGlobalBounds();
-        if (pacmanBounds.intersects(wallBounds))
-        {
-            return true;
-        }
-        return false;
-    }
-
-    void reconsider_critical_state_ghost()
-    {
-        if (ghosts.start)
-        {
-            for(int i=0;i<ghosts.Gsize;i++){
-                Ghost *curr = ghosts.start;
-                curr->criticalstate = false;
-            }
-
-        }
-    }
-
-    void pacman_ghost_collision(int i)
-    {
-        Ghost *curr = &ghosts.start[i];
-            if (enemy_pacman(curr))
-            {
-                if (activepallet)
-                {
-                    if (curr->mytype == 0)
-                    {
-                        curr->ghost_t.loadFromFile("images/ghost1.png");
-                    }
-                    else if (curr->mytype == 1)
-                    {
-                        curr->ghost_t.loadFromFile("images/ghost2.png");
-                    }
-                    else
-                    {
-                        curr->ghost_t.loadFromFile("images/ghost3.png");
-                    }
-                    curr->ghost_s.setTexture(curr->ghost_t);
-                    curr->ghost_s.setPosition(curr->mytype * 80 + maze.centerx - 100, curr->myytype * 60 + maze.centery + 100);
-                    curr->home = true;
-                    score += 150;
-                }
-                else
-                {
-                    Ghost *newcurr = ghosts.start;
-                    while (newcurr)
-                    {
-                        newcurr->ghost_s.setPosition(newcurr->mytype * 80 + maze.centerx - 100, newcurr->myytype * 60 + maze.centery + 100);
-                        newcurr->home = true;
-                        newcurr = newcurr->next;
-                    }
-                    if(lifeT.getElapsedTime().asSeconds()>=2){
-                        lives--;
-                        lifeT.restart();
-                    }
-                    
-                    return;
-                }
-            }
     }
 
     //interface
@@ -891,24 +503,12 @@ public:
                 window.draw(player.pacman_S);
 
                 float time_left = pallettimer.getElapsedTime().asSeconds();
-                if (!firstappearance)
-                {
-                    time_left = 15.0;
-                }
                 float val = (time_left) / 15.0;
-                if (val >= 1 && !pallet.Visible)
-                {
-                    val = 0;
-                }
-                else if (val >= 1 && pallet.Visible)
-                {
-                    val = 1;
-                }
                 food.display(window);
                 //cout<<"before ghosts\n";
                 ghosts.display(window);
                 //cout<<"after ghosts\n";
-                pallet.display(window);
+                //pallet.display(window);
                 maze.display(window, level, validitycount, food.n_food, name, val, lives);
                 displayTopThreeScores();
                 window.display();
@@ -935,105 +535,53 @@ public:
 
             //keypress check
             bakery_lock(Tnum);
-                if(newEvent==1){
-                    newEvent=0;
-                    if (keypress.type == Event::Closed)
+                // if(newEvent==1){
+                //     newEvent=0;
+                //     if (keypress.type == Event::Closed)
+                //         window.close();
+                //     else if (keypress.type == Event::KeyPressed)
+                //     {
+                //         move(keypress);
+                //         player.face_movement(1);
+                //     }
+                // }
+                Event event;
+                while (window.pollEvent(event))
+                {
+                    if (event.type == Event::Closed)
                         window.close();
-                    else if (keypress.type == Event::KeyPressed)
+                    else if (event.type == Event::KeyPressed)
                     {
-                        move(keypress);
+                        move(event);
                         player.face_movement(1);
                     }
                 }
-                //when inside cage
-                //cout<<"outside: "<<ghosts.outside<<endl;
-                if(ghosts.outside<GG){
-                    for(int i=0;i<GG;i++){
-                        if(ghosts.start[i].home==1){
-                            ghosts.selfmove1(i);
-                            ghosts.move1(i);
-                        }
-
-                    }
-                }
-                if(ghosts.outside>0){
-                    ghostlaunched = true;
-                }
-                if(ghosts.outside>=GG){
-                    for(int i=0;i<GG;i++){
-                        moveghostsout1(i);
-                    }
-                }
-
-
+                // checkfood();
+                cout<<"\tbruh"<<endl;
                 //pacman mouth move
-                if (mouth_open.getElapsedTime().asSeconds() >= 0.4)
-                {
-                    player.face_movement(0);
-                    mouth_open.restart();
-                }
+                // if (mouth_open.getElapsedTime().asSeconds() >= 0.4)
+                // {
+                //     player.face_movement(0);
+                //     mouth_open.restart();
+                // }
                 //pacman automove
                 if (automoving.getElapsedTime().asSeconds() >= 0.03)
                 {
                     automove();
                     automoving.restart();
                 }
-                //eat plate
-                palletcollection();
+                cout<<"\tbruh2"<<endl;
                 //something related to teleporting idk
-                if (teleporting.getElapsedTime().asSeconds() >= 0.8f && teleported)
-                {
-                    teleported = false;
-                }
+                // if (teleporting.getElapsedTime().asSeconds() >= 0.8f && teleported)
+                // {
+                //     teleported = false;
+                // }
                 //self move on ghosts idk what this does either
-                if (ghostselfmove.getElapsedTime().asSeconds() >= 0.06)
-                {
-                    ghosts.updateself();
-                    ghostselfmove.restart();
-                }
-                //key released
-                int value;
-                sem_getvalue(&ghost_key, &value);
-                if(ghostkeyT.getElapsedTime().asSeconds() >=1.5 && value==0){
-                    sem_post(&ghost_key);
-                    ghostkeyT.restart();
-                }
-                //ghost movement
-                if (movement.getElapsedTime().asSeconds() > 0.0905f)
-                {
-                    movement.restart();
-                }
-                if (movement.getElapsedTime().asSeconds() > 0.010f && !teleported && ghostlaunched)
-                {
-                    if (previousmove != player.dir)
-                    {
-                        movementdetector();
-                    }
-                    ghosts.updatehunt();
-                }
-                //pallets
-                if (pallettimer.getElapsedTime().asSeconds() >= 15.0f && !pallet.Visible)
-                {
-                    deploypallet();
-                }
-                //gaari ke blinker
-                if (eatghosts.getElapsedTime().asSeconds() > 5.0f && eatghosts.getElapsedTime().asSeconds() < 5.3f)
-                {
-                    ghosts.unblink();
-                    activepallet = false;
-                }
-                //pata nahi kia
-                if (critical_state_ghost.getElapsedTime().asSeconds() >= 0.5f)
-                {
-                    critical_state_ghost.restart();
-                    reconsider_critical_state_ghost();
-                }
-                //lives
-                if (lives <= 0)
-                {
-                    highscore.insert(score, name);
-                    return;
-                }
+                // if (ghostselfmove.getElapsedTime().asSeconds() >= 0.06)
+                // {
+                //     ghosts.updateself();
+                //     ghostselfmove.restart();
+                // }
             bakery_unlock(Tnum);
         }
     }
@@ -1047,14 +595,12 @@ public:
     }
     //ghosts
     void ghost_Game(int Tnum){
-        moveghostsout(Tnum);
+        //moveghostsout(Tnum);
         while (window.isOpen()){
-            
+
             Gbakery_lock(Tnum);
-                ghosts.selfmove(Tnum);
+                //ghosts.selfmove(Tnum);
                 ghosts.move(Tnum);
-                hunt(Tnum);
-                pacman_ghost_collision(Tnum);
             Gbakery_unlock(Tnum);
 
 
@@ -1107,17 +653,15 @@ int main(){
         valuesG[i]=0;
     }
 
-    sem_init(&ghost_key,0,1);
-
     srand(time(0));
     //interface
     pthread_create(&threads[0],NULL,interface_t,(void*)(new int(0)));
-    pthread_create(&threads[1],NULL,input_t,(void*)(new int(1)));
+    //pthread_create(&threads[1],NULL,input_t,(void*)(new int(1)));
     pthread_create(&threads[2],NULL,engine_t,(void*)(new int(2)));
-    pthread_create(&threads[3],NULL,food_t,(void*)(new int(3)));
+    // pthread_create(&threads[3],NULL,food_t,(void*)(new int(3)));
 
     for(int i=0;i<GG;i++){
-        pthread_create(&threadsG[i],NULL,ghost_t,(void*)(new int(i)));
+        //pthread_create(&threadsG[i],NULL,ghost_t,(void*)(new int(i)));
     }
     //main thread
     while (window2.isOpen()){}
