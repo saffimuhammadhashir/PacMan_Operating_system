@@ -107,6 +107,7 @@ public:
     {
         while (window.isOpen())
         {
+            //done
             Event event;
             while (window.pollEvent(event))
             {
@@ -120,28 +121,31 @@ public:
             }
             window.clear();
             window.draw(player.pacman_S);
-
+            //!
             if (eatghosts.getElapsedTime().asSeconds() > 5.0f && eatghosts.getElapsedTime().asSeconds() < 5.3f)
             {
                 ghosts.unblink();
                 activepallet = false;
             }
-
+            //done
             if (mouth_open.getElapsedTime().asSeconds() >= 0.4)
             {
                 player.face_movement(0);
                 mouth_open.restart();
             }
-
+            //!
             if (pallettimer.getElapsedTime().asSeconds() >= 15.0f && !pallet.Visible)
             {
                 deploypallet();
             }
+
+            //done
             if (automoving.getElapsedTime().asSeconds() >= 0.03)
             {
                 automove();
                 automoving.restart();
             }
+            //!
             if (ghostselfmove.getElapsedTime().asSeconds() >= 0.06)
             {
                 ghosts.selfmove();
@@ -167,10 +171,12 @@ public:
                 }
                 hunt();
             }
+            //done
             if (teleporting.getElapsedTime().asSeconds() >= 0.8f && teleported)
             {
                 teleported = false;
             }
+            //!
             if (critical_state_ghost.getElapsedTime().asSeconds() >= 0.5f)
             {
                 critical_state_ghost.restart();
@@ -192,13 +198,19 @@ public:
             }
             pacman_ghost_collision();
             palletcollection();
+
+            //done
             food.display(window);
             ghosts.display(window);
             pallet.display(window);
+            //done
             checkfood();
+
+            //done
             maze.display(window, level, validitycount, food.n_food, name, val, lives);
             displayTopThreeScores();
             window.display();
+            //!
             if (lives <= 0)
             {
                 highscore.insert(score, name);
@@ -650,7 +662,7 @@ public:
             }
         }
     }
-
+//
     void automove()
     {
 

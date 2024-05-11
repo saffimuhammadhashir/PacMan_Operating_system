@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "cmath": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "fstream": "cpp",
+        "typeinfo": "cpp",
+        "*.tcc": "cpp"
     }
 }
