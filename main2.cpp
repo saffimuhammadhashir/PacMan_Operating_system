@@ -102,82 +102,18 @@ void bakery_lock(int num)
         }
     }
 
-        cout << "Thread " << num << " has entered the critical region\n";
+    cout << "Thread " << num << " has entered the critical region\n";
 }
 
 void bakery_unlock(int num)
 {
 
-        cout << "Thread " << num << " is leaving the critical region\n\n";
+    cout << "Thread " << num << " is leaving the critical region\n\n";
     values[num] = 0;
     usleep(10000);
 }
 
 // sf::RenderWindow window2(sf::VideoMode(800, 600), "SFML Window");
-void displayPauseMenu(sf::RenderWindow &window)
-{
-    // Create background
-    sf::RectangleShape background(sf::Vector2f(window.getSize().x, window.getSize().y));
-    background.setFillColor(sf::Color::White);
-
-    // Load font
-    sf::Font font;
-    if (!font.loadFromFile("font/BebasNeue-Regular.ttf"))
-    {
-        // Error handling
-        return;
-    }
-
-    // Text setup
-    sf::Text title("Pause Menu", font, 50);
-    title.setFillColor(sf::Color::Black);
-    title.setStyle(sf::Text::Bold);
-    title.setPosition(window.getSize().x / 2 - title.getGlobalBounds().width / 2, 50);
-
-    sf::Text resumeText("Resume", font, 30);
-    resumeText.setFillColor(sf::Color::Black);
-    resumeText.setPosition(window.getSize().x / 2 - resumeText.getGlobalBounds().width / 2, 200);
-
-    sf::Text exitText("Exit", font, 30);
-    exitText.setFillColor(sf::Color::Black);
-    exitText.setPosition(window.getSize().x / 2 - exitText.getGlobalBounds().width / 2, 250);
-
-    // Display window until closed
-    while (window.isOpen())
-    {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-            {
-                window.close();
-            }
-            else if (event.type == sf::Event::MouseButtonPressed)
-            {
-                if (event.mouseButton.button == sf::Mouse::Left)
-                {
-
-                    if (resumeText.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y))
-                    {
-                        return;
-                    }
-
-                    else if (exitText.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y))
-                    {
-                        window.close(); // Close the window
-                    }
-                }
-            }
-        }
-
-        window.clear();
-        window.draw(background);
-        window.draw(title);
-        window.draw(resumeText);
-        window.draw(exitText);
-        window.display();
-    }
-}
 
 class Game
 {
@@ -217,10 +153,10 @@ public:
     bool teleported = false;
     int lives = 3;
     bool activestate = true;
-    Texture invincibility,ring;
-    Sprite invincibilityS,ringS;
+    Texture invincibility, ring, Super_powerT;
+    Sprite invincibilityS, ringS, Super_powerS;
 
-    Text inv;
+    Text inv, AImover;
     bool firstdead = false;
     Game()
     {
@@ -241,15 +177,26 @@ public:
         invincibilityS.setScale(0.4, 0.5);
         invincibilityS.setPosition(910, 50);
 
-        automover=0;
-        autod=0;
-        autop=0;
-        findnext=1;
+        Super_powerT.loadFromFile("images/buttons.png");
+        Super_powerS.setTexture(Super_powerT);
+        Super_powerS.setScale(0.5, 0.4);
+        Super_powerS.setPosition(650, 600);
+
+        AImover.setFont(font);
+        AImover.setCharacterSize(32);
+        AImover.setFillColor(Color::Black);
+        AImover.setString("AUTO MOVER ACTIVE!");
+        AImover.setPosition(680, 680);
+
+        automover = 0;
+        autod = 0;
+        autop = 0;
+        findnext = 1;
 
         ring.loadFromFile("images/ring.png");
         ringS.setTexture(ring);
         ringS.setScale(0.1, 0.1);
-        ringS.setPosition(player.pacman_S.getPosition().x-9, player.pacman_S.getPosition().y-9);
+        ringS.setPosition(player.pacman_S.getPosition().x - 9, player.pacman_S.getPosition().y - 9);
         newEvent = 0;
     }
 
@@ -269,7 +216,7 @@ public:
             }
         }
 
-        if (pacman.getPosition().x > maze.centerx - 100 && pacman.getPosition().x < maze.centerx + 100 && pacman.getPosition().y < maze.centery + 80 && pacman.getPosition().y > maze.centery + 20 )
+        if (pacman.getPosition().x > maze.centerx - 100 && pacman.getPosition().x < maze.centerx + 100 && pacman.getPosition().y < maze.centery + 80 && pacman.getPosition().y > maze.centery + 20)
         {
             return true;
         }
@@ -396,12 +343,7 @@ public:
         {
             exit(0);
         }
-        else if (event.key.code == sf::Keyboard::Space)
-        {
-            activestate = false;
-            displayPauseMenu(window);
-            activestate = true;
-        }
+
         player.pacman_S.setPosition(PosX, PosY);
     }
 
@@ -618,7 +560,7 @@ public:
         {
             food.valid[index] = 0;
             Tautomove.restart();
-            findnext=1;
+            findnext = 1;
             score += 50;
             validitycount++;
             if (validitycount == food.n_food - 1)
@@ -637,7 +579,7 @@ public:
     {
 
         FloatRect pacmanBounds = pacman.getGlobalBounds();
-        int x=pacman.getPosition().x;
+        int x = pacman.getPosition().x;
 
         for (int i = 0; i < numWalls; i++)
         {
@@ -965,7 +907,7 @@ public:
             }
         }
     }
-   
+
     void moveghostoutofwall()
     {
         if (ghosts.start)
@@ -1076,7 +1018,6 @@ public:
                 window.clear();
                 window.draw(player.pacman_S);
 
-
                 float time_left = pallettimer.getElapsedTime().asSeconds();
                 if (!firstappearance)
                 {
@@ -1092,8 +1033,6 @@ public:
                     val = 1;
                 }
 
-
-
                 food.display(window);
                 // cout<<"before ghosts\n";
                 ghosts.display(window);
@@ -1102,17 +1041,22 @@ public:
                 maze.display(window, level, validitycount, food.n_food, name, val, lives);
                 displayTopThreeScores();
                 float vallife = 0.0f;
-                if (lifeT.getElapsedTime().asSeconds() <= 5.0f && firstdead )
+                if (lifeT.getElapsedTime().asSeconds() <= 5.0f && firstdead)
                 {
 
-                    vallife = lifeT.getElapsedTime().asSeconds()/5.0f;
-                                    window.draw(ringS);
+                    vallife = lifeT.getElapsedTime().asSeconds() / 5.0f;
+                    window.draw(ringS);
                 }
-                invincibilityS.setScale(vallife*0.4, 0.5);
+                invincibilityS.setScale(vallife * 0.4, 0.5);
 
                 window.draw(invincibilityS);
                 window.draw(inv);
+                if (automover)
+                {
 
+                    window.draw(Super_powerS);
+                    window.draw(AImover);
+                }
                 window.display();
                 usleep(10000);
             }
@@ -1125,247 +1069,291 @@ public:
         while (window.isOpen())
         {
 
-
-                Event event;
-                while (window.pollEvent(event))
-                {
-                    bakery_lock(Tnum);
-                    keypress = event;
-                    newEvent = 1;
-                    bakery_unlock(Tnum);
-                }
-
+            Event event;
+            while (window.pollEvent(event))
+            {
+                bakery_lock(Tnum);
+                keypress = event;
+                newEvent = 1;
+                bakery_unlock(Tnum);
+            }
         }
     }
-    //spam automove
+    // spam automove
 
-    void auto_spam(){
-        if(automover){
-            if(autod==0){
-                if(autop==0){
+    void auto_spam()
+    {
+        if (automover)
+        {
+            if (autod == 0)
+            {
+                if (autop == 0)
+                {
                     Event keyEvent;
                     keyEvent.type = Event::KeyPressed;
                     keyEvent.key.code = Keyboard::Up;
-                    keypress=keyEvent;
-                    newEvent=1;
-                    autop=1;
+                    keypress = keyEvent;
+                    newEvent = 1;
+                    autop = 1;
                 }
-                else{
+                else
+                {
                     Event keyEvent;
                     keyEvent.type = Event::KeyPressed;
                     keyEvent.key.code = Keyboard::Left;
-                    keypress=keyEvent;
-                    newEvent=1;
-                    autop=0;
+                    keypress = keyEvent;
+                    newEvent = 1;
+                    autop = 0;
                 }
             }
-            else if(autod==1){
-                if(autop==0){
+            else if (autod == 1)
+            {
+                if (autop == 0)
+                {
                     Event keyEvent;
                     keyEvent.type = Event::KeyPressed;
                     keyEvent.key.code = Keyboard::Up;
-                    keypress=keyEvent;
-                    newEvent=1;
-                    autop=1;
+                    keypress = keyEvent;
+                    newEvent = 1;
+                    autop = 1;
                 }
-                else{
+                else
+                {
                     Event keyEvent;
                     keyEvent.type = Event::KeyPressed;
                     keyEvent.key.code = Keyboard::Right;
-                    keypress=keyEvent;
-                    newEvent=1;
-                    autop=0;
+                    keypress = keyEvent;
+                    newEvent = 1;
+                    autop = 0;
                 }
             }
-            else if(autod==2){
-                if(autop==0){
+            else if (autod == 2)
+            {
+                if (autop == 0)
+                {
                     Event keyEvent;
                     keyEvent.type = Event::KeyPressed;
                     keyEvent.key.code = Keyboard::Down;
-                    keypress=keyEvent;
-                    newEvent=1;
-                    autop=1;
+                    keypress = keyEvent;
+                    newEvent = 1;
+                    autop = 1;
                 }
-                else{
+                else
+                {
                     Event keyEvent;
                     keyEvent.type = Event::KeyPressed;
                     keyEvent.key.code = Keyboard::Left;
-                    keypress=keyEvent;
-                    newEvent=1;
-                    autop=0;
+                    keypress = keyEvent;
+                    newEvent = 1;
+                    autop = 0;
                 }
             }
-            else if(autod==3){
-                if(autop==0){
+            else if (autod == 3)
+            {
+                if (autop == 0)
+                {
                     Event keyEvent;
                     keyEvent.type = Event::KeyPressed;
                     keyEvent.key.code = Keyboard::Down;
-                    keypress=keyEvent;
-                    newEvent=1;
-                    autop=1;
+                    keypress = keyEvent;
+                    newEvent = 1;
+                    autop = 1;
                 }
-                else{
+                else
+                {
                     Event keyEvent;
                     keyEvent.type = Event::KeyPressed;
                     keyEvent.key.code = Keyboard::Right;
-                    keypress=keyEvent;
-                    newEvent=1;
-                    autop=0;
+                    keypress = keyEvent;
+                    newEvent = 1;
+                    autop = 0;
                 }
             }
             move(keypress);
         }
     }
 
-
-    void wallmerge(){
-        for(int i=0;i<ghosts.Gsize;i++){
-            int found1=-1;
+    void wallmerge()
+    {
+        for (int i = 0; i < ghosts.Gsize; i++)
+        {
+            int found1 = -1;
             FloatRect wall;
             FloatRect bounds1 = ghosts.start[i].ghost_s.getGlobalBounds();
-            for(int j=0;j<maze.n_horizontal;j++){
-                FloatRect bounds2=maze.wall_s_horizontal[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
+            for (int j = 0; j < maze.n_horizontal; j++)
+            {
+                FloatRect bounds2 = maze.wall_s_horizontal[j].getGlobalBounds();
+                if (bounds1.intersects(bounds2))
+                {
+                    wall = bounds2;
+                    found1 = 1;
                     break;
                 }
             }
-            for(int j=0;j<maze.n_leftbottom;j++){
-                FloatRect bounds2=maze.wall_s_leftbottom[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
+            for (int j = 0; j < maze.n_leftbottom; j++)
+            {
+                FloatRect bounds2 = maze.wall_s_leftbottom[j].getGlobalBounds();
+                if (bounds1.intersects(bounds2))
+                {
+                    wall = bounds2;
+                    found1 = 1;
                     break;
                 }
             }
-            for(int j=0;j<maze.n_lefttop;j++){
-                FloatRect bounds2=maze.wall_s_lefttop[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
+            for (int j = 0; j < maze.n_lefttop; j++)
+            {
+                FloatRect bounds2 = maze.wall_s_lefttop[j].getGlobalBounds();
+                if (bounds1.intersects(bounds2))
+                {
+                    wall = bounds2;
+                    found1 = 1;
                     break;
                 }
             }
-            for(int j=0;j<maze.n_rightbottom;j++){
-                FloatRect bounds2=maze.wall_s_rightbottom[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
+            for (int j = 0; j < maze.n_rightbottom; j++)
+            {
+                FloatRect bounds2 = maze.wall_s_rightbottom[j].getGlobalBounds();
+                if (bounds1.intersects(bounds2))
+                {
+                    wall = bounds2;
+                    found1 = 1;
                     break;
                 }
             }
-            for(int j=0;j<maze.n_righttop;j++){
-                FloatRect bounds2=maze.wall_s_righttop[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
+            for (int j = 0; j < maze.n_righttop; j++)
+            {
+                FloatRect bounds2 = maze.wall_s_righttop[j].getGlobalBounds();
+                if (bounds1.intersects(bounds2))
+                {
+                    wall = bounds2;
+                    found1 = 1;
                     break;
                 }
             }
-            for(int j=0;j<maze.n_vertical;j++){
-                FloatRect bounds2=maze.wall_s_vertical[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
+            for (int j = 0; j < maze.n_vertical; j++)
+            {
+                FloatRect bounds2 = maze.wall_s_vertical[j].getGlobalBounds();
+                if (bounds1.intersects(bounds2))
+                {
+                    wall = bounds2;
+                    found1 = 1;
                     break;
                 }
             }
-            
-            if(found1!=-1){
-                int mov=-1;
 
-                if(bounds1.top<wall.top){
-                    ghosts.start[i].ghost_s.setPosition(ghosts.start[i].ghost_s.getPosition().x, ghosts.start[i].ghost_s.getPosition().y -10);
+            if (found1 != -1)
+            {
+                int mov = -1;
+
+                if (bounds1.top < wall.top)
+                {
+                    ghosts.start[i].ghost_s.setPosition(ghosts.start[i].ghost_s.getPosition().x, ghosts.start[i].ghost_s.getPosition().y - 10);
                 }
-                else if((bounds1.left+bounds1.width)>(wall.left+wall.width) ){
-                    ghosts.start[i].ghost_s.setPosition(ghosts.start[i].ghost_s.getPosition().x+10, ghosts.start[i].ghost_s.getPosition().y);
+                else if ((bounds1.left + bounds1.width) > (wall.left + wall.width))
+                {
+                    ghosts.start[i].ghost_s.setPosition(ghosts.start[i].ghost_s.getPosition().x + 10, ghosts.start[i].ghost_s.getPosition().y);
                 }
-                else if((bounds1.top+bounds1.height)>(wall.top+wall.height)){
-                    ghosts.start[i].ghost_s.setPosition(ghosts.start[i].ghost_s.getPosition().x, ghosts.start[i].ghost_s.getPosition().y +10);
+                else if ((bounds1.top + bounds1.height) > (wall.top + wall.height))
+                {
+                    ghosts.start[i].ghost_s.setPosition(ghosts.start[i].ghost_s.getPosition().x, ghosts.start[i].ghost_s.getPosition().y + 10);
                 }
-                else{
-                    ghosts.start[i].ghost_s.setPosition(ghosts.start[i].ghost_s.getPosition().x-10, ghosts.start[i].ghost_s.getPosition().y);
+                else
+                {
+                    ghosts.start[i].ghost_s.setPosition(ghosts.start[i].ghost_s.getPosition().x - 10, ghosts.start[i].ghost_s.getPosition().y);
                 }
             }
         }
     }
 
+    void wallmerge2()
+    {
 
+        int found1 = -1;
+        FloatRect wall;
+        FloatRect bounds1 = player.pacman_S.getGlobalBounds();
+        for (int j = 0; j < maze.n_horizontal; j++)
+        {
+            FloatRect bounds2 = maze.wall_s_horizontal[j].getGlobalBounds();
+            if (bounds1.intersects(bounds2))
+            {
+                wall = bounds2;
+                found1 = 1;
+                break;
+            }
+        }
+        for (int j = 0; j < maze.n_leftbottom; j++)
+        {
+            FloatRect bounds2 = maze.wall_s_leftbottom[j].getGlobalBounds();
+            if (bounds1.intersects(bounds2))
+            {
+                wall = bounds2;
+                found1 = 1;
+                break;
+            }
+        }
+        for (int j = 0; j < maze.n_lefttop; j++)
+        {
+            FloatRect bounds2 = maze.wall_s_lefttop[j].getGlobalBounds();
+            if (bounds1.intersects(bounds2))
+            {
+                wall = bounds2;
+                found1 = 1;
+                break;
+            }
+        }
+        for (int j = 0; j < maze.n_rightbottom; j++)
+        {
+            FloatRect bounds2 = maze.wall_s_rightbottom[j].getGlobalBounds();
+            if (bounds1.intersects(bounds2))
+            {
+                wall = bounds2;
+                found1 = 1;
+                break;
+            }
+        }
+        for (int j = 0; j < maze.n_righttop; j++)
+        {
+            FloatRect bounds2 = maze.wall_s_righttop[j].getGlobalBounds();
+            if (bounds1.intersects(bounds2))
+            {
+                wall = bounds2;
+                found1 = 1;
+                break;
+            }
+        }
+        for (int j = 0; j < maze.n_vertical; j++)
+        {
+            FloatRect bounds2 = maze.wall_s_vertical[j].getGlobalBounds();
+            if (bounds1.intersects(bounds2))
+            {
+                wall = bounds2;
+                found1 = 1;
+                break;
+            }
+        }
 
-   void wallmerge2(){
+        if (found1 != -1)
+        {
+            int mov = -1;
 
-            int found1=-1;
-            FloatRect wall;
-            FloatRect bounds1 = player.pacman_S.getGlobalBounds();
-            for(int j=0;j<maze.n_horizontal;j++){
-                FloatRect bounds2=maze.wall_s_horizontal[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
-                    break;
-                }
+            if (bounds1.top < wall.top)
+            {
+                player.pacman_S.setPosition(player.pacman_S.getPosition().x, player.pacman_S.getPosition().y - 10);
             }
-            for(int j=0;j<maze.n_leftbottom;j++){
-                FloatRect bounds2=maze.wall_s_leftbottom[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
-                    break;
-                }
+            else if ((bounds1.left + bounds1.width) > (wall.left + wall.width))
+            {
+                player.pacman_S.setPosition(player.pacman_S.getPosition().x + 10, player.pacman_S.getPosition().y);
             }
-            for(int j=0;j<maze.n_lefttop;j++){
-                FloatRect bounds2=maze.wall_s_lefttop[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
-                    break;
-                }
+            else if ((bounds1.top + bounds1.height) > (wall.top + wall.height))
+            {
+                player.pacman_S.setPosition(player.pacman_S.getPosition().x, player.pacman_S.getPosition().y + 10);
             }
-            for(int j=0;j<maze.n_rightbottom;j++){
-                FloatRect bounds2=maze.wall_s_rightbottom[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
-                    break;
-                }
+            else
+            {
+                player.pacman_S.setPosition(player.pacman_S.getPosition().x - 10, player.pacman_S.getPosition().y);
             }
-            for(int j=0;j<maze.n_righttop;j++){
-                FloatRect bounds2=maze.wall_s_righttop[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
-                    break;
-                }
-            }
-            for(int j=0;j<maze.n_vertical;j++){
-                FloatRect bounds2=maze.wall_s_vertical[j].getGlobalBounds();
-                if(bounds1.intersects(bounds2)){
-                    wall=bounds2;
-                    found1=1;
-                    break;
-                }
-            }
-            
-            if(found1!=-1){
-                int mov=-1;
-
-                if(bounds1.top<wall.top){
-                    player.pacman_S.setPosition(player.pacman_S.getPosition().x, player.pacman_S.getPosition().y -10);
-                }
-                else if((bounds1.left+bounds1.width)>(wall.left+wall.width) ){
-                    player.pacman_S.setPosition(player.pacman_S.getPosition().x+10, player.pacman_S.getPosition().y);
-                }
-                else if((bounds1.top+bounds1.height)>(wall.top+wall.height)){
-                    player.pacman_S.setPosition(player.pacman_S.getPosition().x, player.pacman_S.getPosition().y +10);
-                }
-                else{
-                    player.pacman_S.setPosition(player.pacman_S.getPosition().x-10, player.pacman_S.getPosition().y);
-                }
-            }
-        
+        }
     }
-
 
     // engine
     void engine_Game(int Tnum)
@@ -1377,8 +1365,8 @@ public:
                 // keypress check
                 bakery_lock(Tnum);
 
-                //oldsprite
-                
+                // oldsprite
+
                 // if(oldT.getElapsedTime().asSeconds()>=0.1 && automover){
                 //     if(oldsprite.getPosition()==player.pacman_S.getPosition()){
                 //         findnext=1;
@@ -1390,7 +1378,6 @@ public:
                 //     oldsprite.setPosition(player.pacman_S.getPosition());
                 //     StuckT.restart();
                 // }
-                
 
                 if (newEvent == 1)
                 {
@@ -1399,24 +1386,27 @@ public:
                         window.close();
                     else if (keypress.type == Event::KeyPressed)
                     {
-                        if (keypress.key.code == sf::Keyboard::A) {
-                            if(!automover){
-                                automover=1;
+                        if (keypress.key.code == sf::Keyboard::A)
+                        {
+                            if (!automover)
+                            {
+                                automover = 1;
                             }
-                            else{
-                                automover=0;
+                            else
+                            {
+                                automover = 0;
                             }
-                            
                         }
-                        else{
+                        else
+                        {
 
                             move(keypress);
-  
+
                             player.face_movement(1);
                         }
                     }
                 }
-                //spam
+                // spam
                 auto_spam();
 
                 // when inside cage
@@ -1475,7 +1465,7 @@ public:
                 // self move on ghosts idk what this does either
                 if (ghostselfmove.getElapsedTime().asSeconds() >= 0.06)
                 {
-                    //ghosts.allselfchange();
+                    // ghosts.allselfchange();
                     ghostselfmove.restart();
                 }
                 // key released
@@ -1493,7 +1483,7 @@ public:
                 }
                 if (movement.getElapsedTime().asSeconds() > 0.010f && !teleported && ghostlaunched)
                 {
-                    if (previousmove != player.dir && lifeT.getElapsedTime().asSeconds()>=5.0f)
+                    if (previousmove != player.dir && lifeT.getElapsedTime().asSeconds() >= 5.0f)
                     {
                         movementdetector();
                     }
@@ -1503,6 +1493,7 @@ public:
                 if (lives <= 0)
                 {
                     highscore.insert(score, name);
+                    window.close();
                     return;
                 }
 
@@ -1543,37 +1534,43 @@ public:
         }
     }
 
-
     void auto_Game(int Tnum)
     {
-        while (window.isOpen()){
-            if(automover && (findnext || Tautomove.getElapsedTime().asSeconds()>=0.55)){
+        while (window.isOpen())
+        {
+            if (automover && (findnext || Tautomove.getElapsedTime().asSeconds() >= 0.55))
+            {
                 bakery_lock(Tnum);
-                    float mindis=10000;
-                    int dd=0;
-                    int px= player.pacman_S.getPosition().x;
-                    int py= player.pacman_S.getPosition().y;
-                    for(int i=0;i<food.n_food;i++){
-                        if(food.valid[i]==1){
-                            int fx=food.food_S[i].getPosition().x;
-                            int fy=food.food_S[i].getPosition().y;
-                            //distance formula
-                            float d = pow((pow(px-fx,2)+pow(py-fy,2)),0.5);
-                            if(d<mindis){
-                                mindis=d;
-                                dd=0;
-                                if(px<fx){
-                                    dd++;
-                                }
-                                if(py<fy){
-                                    dd+=2;
-                                }
+                float mindis = 10000;
+                int dd = 0;
+                int px = player.pacman_S.getPosition().x;
+                int py = player.pacman_S.getPosition().y;
+                for (int i = 0; i < food.n_food; i++)
+                {
+                    if (food.valid[i] == 1)
+                    {
+                        int fx = food.food_S[i].getPosition().x;
+                        int fy = food.food_S[i].getPosition().y;
+                        // distance formula
+                        float d = pow((pow(px - fx, 2) + pow(py - fy, 2)), 0.5);
+                        if (d < mindis)
+                        {
+                            mindis = d;
+                            dd = 0;
+                            if (px < fx)
+                            {
+                                dd++;
+                            }
+                            if (py < fy)
+                            {
+                                dd += 2;
                             }
                         }
                     }
-                    autod=dd;
-                    Tautomove.restart();
-                    findnext=0;
+                }
+                autod = dd;
+                Tautomove.restart();
+                findnext = 0;
                 bakery_unlock(Tnum);
             }
         }
@@ -1631,7 +1628,6 @@ public:
 };
 
 Game G;
-
 void *engine_t(void *arg)
 {
     int Tnum = *((int *)arg);
@@ -1692,6 +1688,7 @@ void basefunction()
 {
 
     G.window.create(sf::VideoMode(1200, 800), "PACMAN");
+
     for (int i = 0; i < Tnumb; i++)
     {
         pthread_mutex_init(&busy[i], NULL);
@@ -1982,10 +1979,67 @@ void displayPacmanInstructions(sf::RenderWindow &window)
     }
 }
 
+std::string getUserInput(sf::RenderWindow &window)
+{
+    std::string input;
+
+    sf::Font font;
+    font.loadFromFile("font/BebasNeue-Regular.ttf");
+    sf::Text text;
+    text.setFont(font);
+    text.setCharacterSize(24);
+    text.setFillColor(sf::Color::Black);
+
+    sf::Text title("Input Name", font, 50);
+    title.setFillColor(sf::Color::Black);
+    title.setStyle(sf::Text::Bold);
+    title.setPosition(window.getSize().x / 2 - title.getGlobalBounds().width / 2, 50);
+
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                window.close();
+            }
+            else if (event.type == sf::Event::TextEntered)
+            {
+                if (event.text.unicode < 128)
+                {
+                    if (event.text.unicode == 8 && !input.empty())
+                    { // Handle backspace
+                        input.pop_back();
+                    }
+                    else if (event.text.unicode == 13)
+                    { // Handle enter
+                    return input;
+                    }
+                    else
+                    {
+                        input += static_cast<char>(event.text.unicode);
+                    }
+                    text.setString(input);
+                }
+            }
+        }
+
+        window.clear(sf::Color::White);
+        text.setPosition(window.getSize().x / 2 - text.getGlobalBounds().width / 2, 300.f);
+
+        window.draw(title);
+        window.draw(text);
+        window.display();
+    }
+
+    return ""; // Return empty string if window is closed
+}
+
 void startmenu()
 {
     sf::RenderWindow window(sf::VideoMode(1200, 700), "PACMAN");
-    displayPauseMenu(window);
+
     sf::RectangleShape background(sf::Vector2f(window.getSize().x, window.getSize().y));
     background.setFillColor(sf::Color::White);
 
@@ -2130,8 +2184,9 @@ void startmenu()
                     // Check if the mouse click is within the bounds of the startOption
                     if (startOption.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y))
                     {
-                        basefunction();
+                        G.name=getUserInput(window);
                         window.close();
+                        basefunction();
                     }
                     else if (highscoreOption.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y))
                     {
