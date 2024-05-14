@@ -23,13 +23,16 @@ public:
     int mytype;
     int myytype;
     bool Bactive;
+    bool mapmove;
     string original;
     Ghost()
     {
         original="";
+        mapmove=0;
     }
     Ghost(int type)
     {
+        mapmove=0;
         int y = type / 4;
         myytype=y;
         type = type % 4;
@@ -52,7 +55,7 @@ public:
             original="images/ghost3.png";
         }
         ghost_s.setTexture(ghost_t);
-        ghost_s.setPosition(type * 80 + 510, y * 60 + 360);
+        ghost_s.setPosition(type * 70 + 520, y * 60 + 370);
         ghost_s.setScale(0.15, 0.15);
     }
     void makeactive(){
@@ -121,12 +124,18 @@ public:
         pchange1=Gsize;
         x=xx;
         y=yy;
+        for(int i=0;i<Gsize;i++){
+            start[i].mapmove=1;
+        }
     }
 
     void removeactive(){
         for(int i=0;i<Gsize;i++){
             start[i].Bactive=0;
+            start[i].makeinactive();
         }
+
+
     }
 
     void updatehunt(){
@@ -138,11 +147,33 @@ public:
         schange1=Gsize;
     }
 
+    void allchange(int xx, int yy){
+        for(int i=0;i<Gsize;i++){
+            start[i].ghost_s.setPosition(start[i].ghost_s.getPosition().x + xx, start[i].ghost_s.getPosition().y + yy);
+        }
+    }
+
+    void allselfchange(){
+        for(int i=0;i<Gsize;i++){
+            if (start[i].currstate == 1)
+            {
+                start[i].ghost_s.setPosition(start[i].ghost_s.getPosition().x, start[i].ghost_s.getPosition().y - 1);
+                start[i].currstate = 2;
+            }
+            else
+            {
+                start[i].ghost_s.setPosition(start[i].ghost_s.getPosition().x, start[i].ghost_s.getPosition().y + 1);
+                start[i].currstate = 1;
+            }
+        }
+    }
+
     void move(int i)
     {
-        if (start && pchange>Gsize-outside){
+        if (start[i].mapmove && pchange>Gsize-outside){
             pchange--;
             start[i].ghost_s.setPosition(start[i].ghost_s.getPosition().x + x, start[i].ghost_s.getPosition().y + y);
+            start[i].mapmove=0;
         }
 
     }
@@ -153,12 +184,12 @@ public:
             schange--;
             if (start[i].currstate == 1)
             {
-                start[i].ghost_s.setPosition(start[i].ghost_s.getPosition().x, start[i].ghost_s.getPosition().y - 2);
+                start[i].ghost_s.setPosition(start[i].ghost_s.getPosition().x, start[i].ghost_s.getPosition().y - 1);
                 start[i].currstate = 2;
             }
             else
             {
-                start[i].ghost_s.setPosition(start[i].ghost_s.getPosition().x, start[i].ghost_s.getPosition().y + 2);
+                start[i].ghost_s.setPosition(start[i].ghost_s.getPosition().x, start[i].ghost_s.getPosition().y + 1);
                 start[i].currstate = 1;
             }
 
@@ -166,9 +197,10 @@ public:
     }
     void move1(int i)
     {
-        if (start && pchange1>outside){
+        if (start[i].mapmove && pchange1>outside){
             pchange1--;
             start[i].ghost_s.setPosition(start[i].ghost_s.getPosition().x + x, start[i].ghost_s.getPosition().y + y);
+            start[i].mapmove=0;
         }
 
     }

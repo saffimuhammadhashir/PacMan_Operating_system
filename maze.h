@@ -54,8 +54,8 @@ public:
     int n_righttop;
     int n_leftbottom;
     int n_rightbottom;
-    int centerx = 650;
-    int centery = 260;
+    int centerx = 660;
+    int centery = 270;
 
     Maze()
     {

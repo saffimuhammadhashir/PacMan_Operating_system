@@ -17,6 +17,7 @@ struct score_body {
 
 class ScoreList {
 private:
+public:
     string filename = "scores.txt";
 
 
@@ -43,7 +44,6 @@ private:
         b->score = tempScore;
         b->name = tempName;
     }
-public:
     score_body* head;
     ScoreList() : head(nullptr) {}
     void insert(int score,string name="Guest") {
